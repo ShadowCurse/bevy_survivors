@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 bevy = { version = "0.9", features = ["dynamic"] }
 bevy_kira_audio = "0.13.0"
+bevy_rapier3d = { version = "0.20.0", features = ["debug-render", "simd-nightly", "parallel"] }
