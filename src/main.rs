@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
+use camera::OrbitCamera;
 
+mod camera;
 mod level;
 mod vehicle;
 
@@ -17,6 +19,7 @@ fn main() {
     app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
     app.add_plugin(RapierDebugRenderPlugin::default());
 
+    app.add_plugin(camera::CameraControllerPlugin);
     app.add_plugin(level::LevelPlugin);
     app.add_plugin(vehicle::VehicePlugin);
 
@@ -37,8 +40,13 @@ fn setup(mut commands: Commands) {
         ..default()
     });
     // camera
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 100.0, 0.0).looking_at(Vec3::ZERO, Vec3::Z),
-        ..default()
-    });
+    commands
+        .spawn(Camera3dBundle {
+            transform: Transform::from_xyz(0.0, 10.0, 0.0).looking_at(Vec3::ZERO, Vec3::Z),
+            ..default()
+        })
+        .insert(OrbitCamera {
+            radius: 30.0,
+            ..Default::default()
+        });
 }
