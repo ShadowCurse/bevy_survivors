@@ -83,7 +83,7 @@ fn pan_orbit_camera(
     }
 }
 
-fn follow_vehicle(mut camera: Query<(&mut OrbitCamera)>, vehicle: Query<&Transform, With<Vehice>>) {
+fn follow_vehicle(mut camera: Query<&mut OrbitCamera>, vehicle: Query<&Transform, With<Vehice>>) {
     if let (Ok(mut camera), Ok(vehicle_transform)) = (camera.get_single_mut(), vehicle.get_single()) {
         camera.focus_point = vehicle_transform.translation;
     }
