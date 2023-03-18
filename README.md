@@ -1,1 +1,1 @@
-# racing_game
+# Bevy experimental game
