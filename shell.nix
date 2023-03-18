@@ -4,6 +4,7 @@ let
     udev
     alsaLib
     wayland
+    pkgconfig
     libxkbcommon
     vulkan-loader
   ];
