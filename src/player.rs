@@ -1,13 +1,17 @@
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 use bevy_rapier2d::prelude::*;
 
-use crate::guns::Gun;
+use crate::{enemy::EnemyWave, guns::Gun};
 
 pub const PLAYER_SPEED: f32 = 696.0;
 
 pub const PLAYER_GUN_DAMAGE: u32 = 10;
 pub const PLAYER_GUN_RANGE: f32 = 300.0;
 pub const PLAYER_ATTACKSPEED: f32 = 1.0;
+
+pub const ENEMY_WAVE_NUMBER: u32 = 3;
+pub const ENEMY_WAVE_RADIUS: f32 = 300.0;
+pub const ENEMY_WAVE_SPAWN_TIME: f32 = 3.0;
 
 pub struct PlayerPlugin;
 
@@ -50,6 +54,11 @@ fn setup(
             damage: PLAYER_GUN_DAMAGE,
             range: PLAYER_GUN_RANGE,
             attack: Timer::from_seconds(PLAYER_ATTACKSPEED, TimerMode::Repeating),
+        })
+        .insert(EnemyWave {
+            number: ENEMY_WAVE_NUMBER,
+            radius: ENEMY_WAVE_RADIUS,
+            timer: Timer::from_seconds(ENEMY_WAVE_SPAWN_TIME, TimerMode::Repeating),
         });
 }
 
