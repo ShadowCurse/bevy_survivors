@@ -42,12 +42,10 @@ fn setup(
         .insert(RigidBody::Dynamic)
         .insert(Collider::ball(10.0))
         .insert(Velocity::default())
-        .insert(ExternalForce::default())
         .insert(Damping {
             linear_damping: 10.0,
             angular_damping: 1.0,
         })
-        // .insert(ColliderMassProperties::Mass(1.0))
         .insert(Player {
             speed: PLAYER_SPEED,
         })

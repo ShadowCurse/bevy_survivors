@@ -102,6 +102,7 @@ fn bullets_get_fired(
             linvel: direction * BULLET_VELOCITY,
             ..default()
         })
+        .insert(ColliderMassProperties::Mass(100.0))
         .insert(TransformBundle::from(bullet_transform))
         .insert(Bullet {
             lifespan: Timer::from_seconds(BULLET_LIFETIME, TimerMode::Once),
@@ -112,13 +113,13 @@ fn bullets_get_fired(
 fn update_bullets(
     time: Res<Time>,
     rapier_context: Res<RapierContext>,
+    mut commands: Commands,
     mut enemies: Query<&mut Enemy>,
     mut bullets: Query<(Entity, &mut Bullet)>,
-    mut despawn_event: EventWriter<EntityDespawnEvent>,
 ) {
     for (entity, mut bullet) in bullets.iter_mut() {
         if bullet.lifespan.tick(time.delta()).finished() {
-            despawn_event.send(EntityDespawnEvent { entity });
+            commands.entity(entity).despawn();
         } else {
             let mut hit = false;
             for contact_pair in rapier_context.contacts_with(entity) {

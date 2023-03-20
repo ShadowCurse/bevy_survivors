@@ -14,17 +14,17 @@ fn main() {
         .add_plugin(enemy::EnemyPlugin)
         .add_plugin(guns::GunsPlugin)
         .add_plugin(player::PlayerPlugin)
-        .add_event::<EntityDespawnEvent>()
+        // .add_event::<EntityDespawnEvent>()
         .add_startup_system(setup)
         .add_system(camera_zoom)
-        .add_system(despawn_entites)
+        // .add_system(despawn_entites)
         .run();
 }
 
-#[derive(Debug)]
-struct EntityDespawnEvent {
-    entity: Entity,
-}
+// #[derive(Debug)]
+// struct EntityDespawnEvent {
+//     entity: Entity,
+// }
 
 fn setup(mut commands: Commands, mut physics: ResMut<RapierConfiguration>) {
     // disable gravity because top down 2d
@@ -45,8 +45,8 @@ fn camera_zoom(
     proj.scale = (proj.scale - scroll).clamp(0.5, 2.0);
 }
 
-fn despawn_entites(mut commands: Commands, mut events: EventReader<EntityDespawnEvent>) {
-    for event in events.iter() {
-        commands.entity(event.entity).despawn();
-    }
-}
+// fn despawn_entites(mut commands: Commands, mut events: EventReader<EntityDespawnEvent>) {
+//     for event in events.iter() {
+//         commands.entity(event.entity).despawn();
+//     }
+// }
