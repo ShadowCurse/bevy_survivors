@@ -5,6 +5,7 @@ use crate::{enemy::Enemy, player::Player, EntityDespawnEvent};
 
 pub const BULLET_LIFETIME: f32 = 1.0;
 pub const BULLET_LIFETIME_AFTER_IMPACT: f32 = 0.1;
+pub const BULLET_VELOCITY: f32 = 2000.0;
 
 pub struct GunsPlugin;
 
@@ -98,10 +99,9 @@ fn bullets_get_fired(
         .spawn(RigidBody::Dynamic)
         .insert(Collider::ball(2.5))
         .insert(Velocity {
-            linvel: direction * 2000.0,
+            linvel: direction * BULLET_VELOCITY,
             ..default()
         })
-        .insert(ColliderMassProperties::Mass(100.0))
         .insert(TransformBundle::from(bullet_transform))
         .insert(Bullet {
             lifespan: Timer::from_seconds(BULLET_LIFETIME, TimerMode::Once),

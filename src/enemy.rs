@@ -44,7 +44,10 @@ fn spawn_enemies(
         commands
             .spawn(RigidBody::Dynamic)
             .insert(Collider::ball(10.0))
-            .insert(Restitution::coefficient(0.9))
+            .insert(Damping {
+                linear_damping: 10.0,
+                angular_damping: 1.0,
+            })
             .insert(TransformBundle::from(Transform::from_translation(position)))
             .insert(Enemy {
                 health: ENEMY_HEALTH,

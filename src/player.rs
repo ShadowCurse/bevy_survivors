@@ -3,14 +3,15 @@ use bevy_rapier2d::prelude::*;
 
 use crate::{enemy::EnemyWave, guns::Gun};
 
-pub const PLAYER_SPEED: f32 = 696.0;
+pub const PLAYER_SPEED: f32 = 120.0;
+pub const PLAYER_MOVEMENT_FORCE: f32 = 1000.0;
 
 pub const PLAYER_GUN_DAMAGE: u32 = 10;
-pub const PLAYER_GUN_RANGE: f32 = 300.0;
+pub const PLAYER_GUN_RANGE: f32 = 100.0;
 pub const PLAYER_ATTACKSPEED: f32 = 1.0;
 
 pub const ENEMY_WAVE_NUMBER: u32 = 3;
-pub const ENEMY_WAVE_RADIUS: f32 = 300.0;
+pub const ENEMY_WAVE_RADIUS: f32 = 150.0;
 pub const ENEMY_WAVE_SPAWN_TIME: f32 = 3.0;
 
 pub struct PlayerPlugin;
@@ -33,20 +34,20 @@ fn setup(
 ) {
     commands
         .spawn(MaterialMesh2dBundle {
-            mesh: meshes.add(shape::Circle::new(20.0).into()).into(),
+            mesh: meshes.add(shape::Circle::new(10.0).into()).into(),
             material: materials.add(ColorMaterial::from(Color::PURPLE)),
             transform: Transform::from_translation(Vec3::new(0.0, 10.0, 0.0)),
             ..default()
         })
         .insert(RigidBody::Dynamic)
-        .insert(Collider::ball(20.0))
+        .insert(Collider::ball(10.0))
         .insert(Velocity::default())
         .insert(ExternalForce::default())
         .insert(Damping {
             linear_damping: 10.0,
             angular_damping: 1.0,
         })
-        .insert(ColliderMassProperties::Mass(1.0))
+        // .insert(ColliderMassProperties::Mass(1.0))
         .insert(Player {
             speed: PLAYER_SPEED,
         })
@@ -89,6 +90,5 @@ fn update_player(
     let movement = movement.normalize() * time.delta().as_secs_f32();
 
     let (player, mut velocity) = player.single_mut();
-    // TODO deal with constant
-    velocity.linvel = movement * player.speed * 500.0;
+    velocity.linvel = movement * player.speed * PLAYER_MOVEMENT_FORCE;
 }
