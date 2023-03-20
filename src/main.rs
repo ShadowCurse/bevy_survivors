@@ -1,6 +1,5 @@
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 use bevy_rapier2d::prelude::*;
-use guns::GunsSystemSet;
 
 mod enemy;
 mod guns;
@@ -17,7 +16,7 @@ fn main() {
         .add_plugin(player::PlayerPlugin)
         .add_event::<EntityDespawnEvent>()
         .add_startup_system(setup)
-        .add_system(despawn_entites.after(GunsSystemSet::Update))
+        .add_system(despawn_entites)
         .run();
 }
 

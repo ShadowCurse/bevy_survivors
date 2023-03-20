@@ -4,25 +4,18 @@ use bevy_rapier2d::prelude::*;
 use crate::{enemy::Enemy, player::Player, EntityDespawnEvent};
 
 pub const BULLET_LIFETIME: f32 = 1.0;
+pub const BULLET_LIFETIME_AFTER_IMPACT: f32 = 0.1;
 
 pub struct GunsPlugin;
 
 impl Plugin for GunsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<ShootEvent>()
-            .add_system(player_shoot.in_set(GunsSystemSet::Shoot))
-            .add_systems(
-                (bullets_get_fired, update_bullets)
-                    .chain()
-                    .in_set(GunsSystemSet::Update),
-            );
+        app.add_event::<ShootEvent>().add_systems((
+            player_shoot,
+            bullets_get_fired,
+            update_bullets,
+        ));
     }
-}
-
-#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-pub enum GunsSystemSet {
-    Shoot,
-    Update,
 }
 
 #[derive(Component)]
@@ -96,7 +89,7 @@ fn bullets_get_fired(
                     linvel: dir * 2000.0,
                     ..default()
                 })
-                .insert(ColliderMassProperties::Mass(1.0))
+                .insert(ColliderMassProperties::Mass(100.0))
                 .insert(TransformBundle::from(bullet_transform))
                 .insert(Bullet {
                     lifespan: Timer::from_seconds(BULLET_LIFETIME, TimerMode::Once),
@@ -128,7 +121,7 @@ fn update_bullets(
                 }
             }
             if hit {
-                despawn_event.send(EntityDespawnEvent { entity });
+                bullet.lifespan.set_duration(std::time::Duration::from_secs_f32(BULLET_LIFETIME_AFTER_IMPACT));
             }
         }
     }

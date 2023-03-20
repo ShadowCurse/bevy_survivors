@@ -13,14 +13,8 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup)
-            .add_system(update_player.in_set(PlayerSystemSet::Move));
+        app.add_startup_system(setup).add_system(update_player);
     }
-}
-
-#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-pub enum PlayerSystemSet {
-    Move,
 }
 
 #[derive(Component)]

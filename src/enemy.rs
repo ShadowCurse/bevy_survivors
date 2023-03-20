@@ -8,15 +8,8 @@ pub struct EnemyPlugin;
 
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup)
-            .add_system(spawn_enemies.in_set(EnemySystemSet::Spawn));
+        app.add_startup_system(setup).add_system(spawn_enemies);
     }
-}
-
-#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-pub enum EnemySystemSet {
-    Spawn,
-    Move,
 }
 
 #[derive(Component)]
