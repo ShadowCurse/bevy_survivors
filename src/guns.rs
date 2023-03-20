@@ -61,7 +61,7 @@ fn player_shoot(
         pt.translation.truncate(),
         0.0,
         &Collider::ball(pg.range),
-        QueryFilter::default(),
+        QueryFilter::only_dynamic(),
         callback,
     );
 }
@@ -72,31 +72,41 @@ fn bullets_get_fired(
     mut commands: Commands,
     mut events: EventReader<ShootEvent>,
 ) {
+    if events.is_empty() {
+        return;
+    }
+
     let player_transform = player.single();
+
+    let (mut direction, mut damage, mut length) = (Vec3::ZERO, 0, f32::MAX);
     for e in events.iter() {
         if let Ok(enemy_transform) = enemies.get(e.target) {
-            let dir = (enemy_transform.translation - player_transform.translation)
-                .truncate()
-                .normalize();
-
-            let mut bullet_transform = *player_transform;
-            bullet_transform.translation += (dir * 25.0).extend(0.0);
-
-            commands
-                .spawn(RigidBody::Dynamic)
-                .insert(Collider::ball(2.5))
-                .insert(Velocity {
-                    linvel: dir * 2000.0,
-                    ..default()
-                })
-                .insert(ColliderMassProperties::Mass(100.0))
-                .insert(TransformBundle::from(bullet_transform))
-                .insert(Bullet {
-                    lifespan: Timer::from_seconds(BULLET_LIFETIME, TimerMode::Once),
-                    damage: e.damage,
-                });
+            let dir = enemy_transform.translation - player_transform.translation;
+            if dir.length_squared() < length {
+                direction = dir;
+                length = dir.length_squared();
+                damage = e.damage;
+            }
         }
     }
+    let direction = direction.truncate().normalize();
+
+    let mut bullet_transform = *player_transform;
+    bullet_transform.translation += (direction * 25.0).extend(0.0);
+
+    commands
+        .spawn(RigidBody::Dynamic)
+        .insert(Collider::ball(2.5))
+        .insert(Velocity {
+            linvel: direction * 2000.0,
+            ..default()
+        })
+        .insert(ColliderMassProperties::Mass(100.0))
+        .insert(TransformBundle::from(bullet_transform))
+        .insert(Bullet {
+            lifespan: Timer::from_seconds(BULLET_LIFETIME, TimerMode::Once),
+            damage,
+        });
 }
 
 fn update_bullets(
@@ -121,7 +131,11 @@ fn update_bullets(
                 }
             }
             if hit {
-                bullet.lifespan.set_duration(std::time::Duration::from_secs_f32(BULLET_LIFETIME_AFTER_IMPACT));
+                bullet
+                    .lifespan
+                    .set_duration(std::time::Duration::from_secs_f32(
+                        BULLET_LIFETIME_AFTER_IMPACT,
+                    ));
             }
         }
     }
