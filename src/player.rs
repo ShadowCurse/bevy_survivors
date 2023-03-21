@@ -4,9 +4,10 @@ use bevy_rapier2d::prelude::*;
 use crate::{enemy::EnemyWave, guns::Gun};
 
 pub const PLAYER_SPEED: f32 = 120.0;
+pub const PLAYER_HEALTH: i32 = 200;
 pub const PLAYER_MOVEMENT_FORCE: f32 = 1000.0;
 
-pub const PLAYER_GUN_DAMAGE: u32 = 10;
+pub const PLAYER_GUN_DAMAGE: i32 = 10;
 pub const PLAYER_GUN_RANGE: f32 = 100.0;
 pub const PLAYER_ATTACKSPEED: f32 = 1.0;
 
@@ -24,7 +25,8 @@ impl Plugin for PlayerPlugin {
 
 #[derive(Component)]
 pub struct Player {
-    speed: f32,
+    pub health: i32,
+    pub speed: f32,
 }
 
 fn setup(
@@ -47,6 +49,7 @@ fn setup(
             angular_damping: 1.0,
         })
         .insert(Player {
+            health: PLAYER_HEALTH,
             speed: PLAYER_SPEED,
         })
         .insert(Gun {

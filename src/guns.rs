@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
-use crate::{enemy::Enemy, player::Player, EntityDespawnEvent};
+use crate::{damage::EnemyDamageEvent, enemy::Enemy, player::Player};
 
 pub const BULLET_LIFETIME: f32 = 1.0;
 pub const BULLET_LIFETIME_AFTER_IMPACT: f32 = 0.1;
@@ -11,17 +11,14 @@ pub struct GunsPlugin;
 
 impl Plugin for GunsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<ShootEvent>().add_systems((
-            player_shoot,
-            bullets_get_fired,
-            update_bullets,
-        ));
+        app.add_event::<ShootEvent>()
+            .add_systems((player_shoot, fire_bullets, update_bullets));
     }
 }
 
 #[derive(Component)]
 pub struct Gun {
-    pub damage: u32,
+    pub damage: i32,
     pub range: f32,
     pub attack: Timer,
 }
@@ -29,13 +26,13 @@ pub struct Gun {
 #[derive(Component)]
 pub struct Bullet {
     lifespan: Timer,
-    damage: u32,
+    damage: i32,
 }
 
 #[derive(Debug)]
 pub struct ShootEvent {
     target: Entity,
-    damage: u32,
+    damage: i32,
 }
 
 fn player_shoot(
@@ -67,7 +64,7 @@ fn player_shoot(
     );
 }
 
-fn bullets_get_fired(
+fn fire_bullets(
     player: Query<&Transform, With<Player>>,
     enemies: Query<&Transform, With<Enemy>>,
     mut commands: Commands,
@@ -112,10 +109,11 @@ fn bullets_get_fired(
 
 fn update_bullets(
     time: Res<Time>,
+    enemies: Query<Entity, With<Enemy>>,
     rapier_context: Res<RapierContext>,
     mut commands: Commands,
-    mut enemies: Query<&mut Enemy>,
     mut bullets: Query<(Entity, &mut Bullet)>,
+    mut damage_event: EventWriter<EnemyDamageEvent>,
 ) {
     for (entity, mut bullet) in bullets.iter_mut() {
         if bullet.lifespan.tick(time.delta()).finished() {
@@ -123,12 +121,18 @@ fn update_bullets(
         } else {
             let mut hit = false;
             for contact_pair in rapier_context.contacts_with(entity) {
-                if let Ok(mut enemy) = enemies.get_mut(contact_pair.collider1()) {
+                if let Ok(enemy) = enemies.get(contact_pair.collider1()) {
                     hit = true;
-                    enemy.health -= bullet.damage as i64;
-                } else if let Ok(mut enemy) = enemies.get_mut(contact_pair.collider2()) {
+                    damage_event.send(EnemyDamageEvent {
+                        target: enemy,
+                        damage: bullet.damage,
+                    });
+                } else if let Ok(enemy) = enemies.get(contact_pair.collider2()) {
                     hit = true;
-                    enemy.health -= bullet.damage as i64;
+                    damage_event.send(EnemyDamageEvent {
+                        target: enemy,
+                        damage: bullet.damage,
+                    });
                 }
             }
             if hit {

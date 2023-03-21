@@ -1,24 +1,37 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
-use crate::player::Player;
+use crate::{damage::PlayerDamageEvent, player::Player};
 
-pub const ENEMY_HEALTH: i64 = 100;
+pub const ENEMY_HEALTH: i32 = 100;
 pub const ENEMY_SPEED: f32 = 69.0;
 pub const ENEMY_MOVEMENT_FORCE: f32 = 1000.0;
+
+pub const ENEMY_ATTACK_DAMAGE: i32 = 5;
+pub const ENEMY_ATTACK_RADIUS: f32 = 69.0;
+pub const ENEMY_ATTACK_SPEED: f32 = 1.0;
 
 pub struct EnemyPlugin;
 
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems((enemy_spawn, enemy_movement));
+        app.add_systems((enemy_spawn, enemy_movement, enemy_damage));
     }
 }
 
 #[derive(Component)]
 pub struct Enemy {
-    pub health: i64,
+    pub health: i32,
     pub speed: f32,
+
+    pub distance_to_player: f32,
+}
+
+#[derive(Component)]
+pub struct EnemyAttack {
+    damage: i32,
+    range: f32,
+    timer: Timer,
 }
 
 #[derive(Component)]
@@ -56,6 +69,12 @@ fn enemy_spawn(
             .insert(Enemy {
                 health: ENEMY_HEALTH,
                 speed: ENEMY_SPEED,
+                distance_to_player: f32::MAX,
+            })
+            .insert(EnemyAttack {
+                damage: ENEMY_ATTACK_DAMAGE,
+                range: ENEMY_ATTACK_RADIUS,
+                timer: Timer::from_seconds(ENEMY_ATTACK_SPEED, TimerMode::Repeating),
             });
     }
 }
@@ -63,15 +82,34 @@ fn enemy_spawn(
 fn enemy_movement(
     time: Res<Time>,
     player: Query<&Transform, With<Player>>,
-    mut enemies: Query<(&Enemy, &Transform, &mut Velocity)>,
+    mut enemies: Query<(&Transform, &mut Enemy, &mut Velocity)>,
 ) {
     let player_transform = player.single();
 
-    for (enemy, enemy_transform, mut enemy_velocity) in enemies.iter_mut() {
-        let direction = (player_transform.translation - enemy_transform.translation)
-            .truncate()
-            .normalize();
+    for (enemy_transform, mut enemy, mut enemy_velocity) in enemies.iter_mut() {
+        let vector = player_transform.translation - enemy_transform.translation;
+        let distance = vector.length();
+        let direction = vector.truncate().normalize();
         let movement = direction * time.delta().as_secs_f32();
+
         enemy_velocity.linvel = movement * enemy.speed * ENEMY_MOVEMENT_FORCE;
+        enemy.distance_to_player = distance;
+    }
+}
+
+fn enemy_damage(
+    time: Res<Time>,
+    mut damage_event: EventWriter<PlayerDamageEvent>,
+    mut enemies: Query<(&Enemy, &mut EnemyAttack)>,
+) {
+    for (enemy, mut attack) in enemies.iter_mut() {
+        if !attack.timer.tick(time.delta()).finished() {
+            continue;
+        }
+        if enemy.distance_to_player <= attack.range {
+            damage_event.send(PlayerDamageEvent {
+                damage: attack.damage,
+            });
+        }
     }
 }

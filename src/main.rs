@@ -1,6 +1,7 @@
 use bevy::{input::mouse::MouseWheel, prelude::*};
 use bevy_rapier2d::prelude::*;
 
+mod damage;
 mod enemy;
 mod guns;
 mod player;
@@ -11,6 +12,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(1000.0))
         .add_plugin(RapierDebugRenderPlugin::default())
+        .add_plugin(damage::DamagePlugin)
         .add_plugin(enemy::EnemyPlugin)
         .add_plugin(guns::GunsPlugin)
         .add_plugin(player::PlayerPlugin)
