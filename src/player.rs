@@ -1,7 +1,7 @@
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 use bevy_rapier2d::prelude::*;
 
-use crate::{enemy::EnemyWave, guns::Gun};
+use crate::{enemy::EnemyWave, guns::Gun, GameState};
 
 pub const PLAYER_SPEED: f32 = 120.0;
 pub const PLAYER_HEALTH: i32 = 200;
@@ -19,7 +19,8 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup).add_system(update_player);
+        app.add_startup_system(setup)
+            .add_systems((player_movement, player_death).in_set(OnUpdate(GameState::InGame)));
     }
 }
 
@@ -42,6 +43,7 @@ fn setup(
             ..default()
         })
         .insert(RigidBody::Dynamic)
+        .insert(LockedAxes::ROTATION_LOCKED)
         .insert(Collider::ball(10.0))
         .insert(Velocity::default())
         .insert(Damping {
@@ -64,7 +66,7 @@ fn setup(
         });
 }
 
-fn update_player(
+fn player_movement(
     input: Res<Input<KeyCode>>,
     time: Res<Time>,
     mut player: Query<(&Player, &mut Velocity)>,
@@ -92,4 +94,12 @@ fn update_player(
 
     let (player, mut velocity) = player.single_mut();
     velocity.linvel = movement * player.speed * PLAYER_MOVEMENT_FORCE;
+}
+
+fn player_death(player: Query<&Player>, mut state: ResMut<NextState<GameState>>) {
+    let player = player.single();
+
+    if player.health <= 0 {
+        state.set(GameState::EndGame);
+    }
 }

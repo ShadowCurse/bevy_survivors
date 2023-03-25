@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
-use crate::{damage::PlayerDamageEvent, player::Player};
+use crate::{damage::PlayerDamageEvent, player::Player, GameState};
 
 pub const ENEMY_HEALTH: i32 = 100;
 pub const ENEMY_SPEED: f32 = 69.0;
@@ -15,7 +15,9 @@ pub struct EnemyPlugin;
 
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems((enemy_spawn, enemy_movement, enemy_damage));
+        app.add_systems(
+            (enemy_spawn, enemy_movement, enemy_damage).in_set(OnUpdate(GameState::InGame)),
+        );
     }
 }
 
@@ -59,6 +61,7 @@ fn enemy_spawn(
 
         commands
             .spawn(RigidBody::Dynamic)
+            .insert(LockedAxes::ROTATION_LOCKED)
             .insert(Collider::ball(10.0))
             .insert(Velocity::default())
             .insert(Damping {

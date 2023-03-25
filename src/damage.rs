@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{enemy::Enemy, player::Player};
+use crate::{enemy::Enemy, player::Player, GameState};
 
 pub struct DamagePlugin;
 
@@ -8,7 +8,7 @@ impl Plugin for DamagePlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<PlayerDamageEvent>()
             .add_event::<EnemyDamageEvent>()
-            .add_systems((damage_enemy, damage_player));
+            .add_systems((damage_enemy, damage_player).in_set(OnUpdate(GameState::InGame)));
     }
 }
 
