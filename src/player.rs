@@ -19,7 +19,7 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup)
+        app.add_system(setup.in_schedule(OnEnter(GameState::InGame)))
             .add_systems((player_movement, player_death).in_set(OnUpdate(GameState::InGame)));
     }
 }
@@ -100,6 +100,6 @@ fn player_death(player: Query<&Player>, mut state: ResMut<NextState<GameState>>)
     let player = player.single();
 
     if player.health <= 0 {
-        state.set(GameState::EndGame);
+        state.set(GameState::MainMenu);
     }
 }

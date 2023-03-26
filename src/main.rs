@@ -5,10 +5,13 @@ mod damage;
 mod enemy;
 mod guns;
 mod player;
+mod ui;
+mod utils;
 
 fn main() {
     App::new()
         .insert_resource(ClearColor(Color::BLACK))
+        .add_state::<GameState>()
         .add_plugins(DefaultPlugins)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(1000.0))
         .add_plugin(RapierDebugRenderPlugin::default())
@@ -16,7 +19,7 @@ fn main() {
         .add_plugin(enemy::EnemyPlugin)
         .add_plugin(guns::GunsPlugin)
         .add_plugin(player::PlayerPlugin)
-        .add_state::<GameState>()
+        .add_plugin(ui::UiMainMenuPlugin)
         .add_startup_system(setup)
         .add_system(camera_zoom)
         .run();
@@ -25,8 +28,8 @@ fn main() {
 #[derive(Default, Debug, Clone, PartialEq, Eq, Hash, States)]
 pub enum GameState {
     #[default]
+    MainMenu,
     InGame,
-    EndGame,
 }
 
 fn setup(mut commands: Commands, mut physics: ResMut<RapierConfiguration>) {
