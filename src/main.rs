@@ -8,6 +8,8 @@ mod player;
 mod ui;
 mod utils;
 
+use utils::IntoState;
+
 fn main() {
     App::new()
         .insert_resource(ClearColor(Color::BLACK))
@@ -25,12 +27,14 @@ fn main() {
         .run();
 }
 
+#[repr(u8)]
 #[derive(Default, Debug, Clone, PartialEq, Eq, Hash, States)]
 pub enum GameState {
     #[default]
     MainMenu,
     InGame,
 }
+impl_into_state!(GameState);
 
 fn setup(mut commands: Commands, mut physics: ResMut<RapierConfiguration>) {
     // disable gravity because top down 2d

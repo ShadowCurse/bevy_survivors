@@ -1,6 +1,10 @@
 use bevy::{app::AppExit, prelude::*};
 
-use crate::{utils::remove_all_with, GameState};
+use crate::{
+    impl_into_state,
+    utils::{remove_all_with, set_state, IntoState},
+    GameState,
+};
 
 pub struct UiMainMenuPlugin;
 
@@ -12,6 +16,10 @@ impl Plugin for UiMainMenuPlugin {
             .add_system(button_system.in_set(OnUpdate(UiMainMenuState::MainMenu)))
             .add_system(
                 remove_all_with::<UiMainMenuMarker>.in_schedule(OnExit(UiMainMenuState::MainMenu)),
+            )
+            .add_system(
+                set_state::<UiMainMenuState, { UiMainMenuState::MainMenu as u8 }>
+                    .in_schedule(OnEnter(GameState::MainMenu)),
             );
     }
 }
@@ -23,6 +31,7 @@ enum UiMainMenuState {
     Settings,
     InGame,
 }
+impl_into_state!(UiMainMenuState);
 
 #[derive(Debug, Clone, Copy, Component)]
 struct UiMainMenuMarker;
@@ -147,4 +156,3 @@ fn button_system(
         }
     }
 }
-
