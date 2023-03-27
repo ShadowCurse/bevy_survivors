@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
-use crate::{damage::PlayerDamageEvent, player::Player, GameState};
+use crate::{damage::PlayerDamageEvent, player::Player, utils::remove_all_with, GameState};
 
 pub const ENEMY_HEALTH: i32 = 100;
 pub const ENEMY_SPEED: f32 = 69.0;
@@ -17,7 +17,8 @@ impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             (enemy_spawn, enemy_movement, enemy_damage).in_set(OnUpdate(GameState::InGame)),
-        );
+        )
+        .add_system(remove_all_with::<EnemyMarker>.in_schedule(OnExit(GameState::InGame)));
     }
 }
 
@@ -28,6 +29,9 @@ pub struct Enemy {
 
     pub distance_to_player: f32,
 }
+
+#[derive(Component)]
+pub struct EnemyMarker;
 
 #[derive(Component)]
 pub struct EnemyAttack {
@@ -78,7 +82,8 @@ fn enemy_spawn(
                 damage: ENEMY_ATTACK_DAMAGE,
                 range: ENEMY_ATTACK_RADIUS,
                 timer: Timer::from_seconds(ENEMY_ATTACK_SPEED, TimerMode::Repeating),
-            });
+            })
+            .insert(EnemyMarker);
     }
 }
 

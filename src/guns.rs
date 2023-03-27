@@ -1,7 +1,9 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
-use crate::{damage::EnemyDamageEvent, enemy::Enemy, player::Player, GameState};
+use crate::{
+    damage::EnemyDamageEvent, enemy::Enemy, player::Player, utils::remove_all_with, GameState,
+};
 
 pub const BULLET_LIFETIME: f32 = 1.0;
 pub const BULLET_LIFETIME_AFTER_IMPACT: f32 = 0.1;
@@ -11,9 +13,11 @@ pub struct GunsPlugin;
 
 impl Plugin for GunsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<ShootEvent>().add_systems(
-            (player_shoot, fire_bullets, update_bullets).in_set(OnUpdate(GameState::InGame)),
-        );
+        app.add_event::<ShootEvent>()
+            .add_systems(
+                (player_shoot, fire_bullets, update_bullets).in_set(OnUpdate(GameState::InGame)),
+            )
+            .add_system(remove_all_with::<BulletMarker>.in_schedule(OnExit(GameState::InGame)));
     }
 }
 
@@ -29,6 +33,9 @@ pub struct Bullet {
     lifespan: Timer,
     damage: i32,
 }
+
+#[derive(Component)]
+pub struct BulletMarker;
 
 #[derive(Debug)]
 pub struct ShootEvent {
@@ -105,7 +112,8 @@ fn fire_bullets(
         .insert(Bullet {
             lifespan: Timer::from_seconds(BULLET_LIFETIME, TimerMode::Once),
             damage,
-        });
+        })
+        .insert(BulletMarker);
 }
 
 fn update_bullets(
