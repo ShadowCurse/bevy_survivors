@@ -1,10 +1,10 @@
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 use bevy_rapier2d::prelude::*;
 
-use crate::{enemy::EnemyWave, guns::Gun, GameState};
+use crate::{enemy::EnemyWave, guns::Gun, utils::remove_all_with, GameState};
 
 pub const PLAYER_SPEED: f32 = 120.0;
-pub const PLAYER_HEALTH: i32 = 200;
+pub const PLAYER_HEALTH: i32 = 100;
 pub const PLAYER_MOVEMENT_FORCE: f32 = 1000.0;
 
 pub const PLAYER_GUN_DAMAGE: i32 = 10;
@@ -20,7 +20,8 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_system(setup.in_schedule(OnEnter(GameState::InGame)))
-            .add_systems((player_movement, player_death).in_set(OnUpdate(GameState::InGame)));
+            .add_systems((player_movement, player_death).in_set(OnUpdate(GameState::InGame)))
+            .add_system(remove_all_with::<PlayerMarker>.in_schedule(OnExit(GameState::InGame)));
     }
 }
 
@@ -29,6 +30,9 @@ pub struct Player {
     pub health: i32,
     pub speed: f32,
 }
+
+#[derive(Component)]
+pub struct PlayerMarker;
 
 fn setup(
     mut commands: Commands,
@@ -63,7 +67,8 @@ fn setup(
             number: ENEMY_WAVE_NUMBER,
             radius: ENEMY_WAVE_RADIUS,
             timer: Timer::from_seconds(ENEMY_WAVE_SPAWN_TIME, TimerMode::Repeating),
-        });
+        })
+        .insert(PlayerMarker);
 }
 
 fn player_movement(
