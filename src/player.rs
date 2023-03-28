@@ -3,13 +3,15 @@ use bevy_rapier2d::prelude::*;
 
 use crate::{enemy::EnemyWave, guns::Gun, utils::remove_all_with, GameState};
 
+pub const CHARACTER_RADIUS: f32 = 10.0;
+
 pub const PLAYER_SPEED: f32 = 120.0;
 pub const PLAYER_HEALTH: i32 = 100;
 pub const PLAYER_MOVEMENT_FORCE: f32 = 1000.0;
 
 pub const PLAYER_GUN_DAMAGE: i32 = 10;
 pub const PLAYER_GUN_RANGE: f32 = 100.0;
-pub const PLAYER_ATTACKSPEED: f32 = 1.0;
+pub const PLAYER_ATTACKSPEED: f32 = 0.8;
 
 pub const ENEMY_WAVE_NUMBER: u32 = 3;
 pub const ENEMY_WAVE_RADIUS: f32 = 150.0;
@@ -34,6 +36,63 @@ pub struct Player {
 #[derive(Component)]
 pub struct PlayerMarker;
 
+#[derive(Bundle)]
+pub struct CharacterBundle {
+    rigid_body: RigidBody,
+    collider: Collider,
+    locked_axis: LockedAxes,
+    velocity: Velocity,
+    damping: Damping,
+}
+
+impl Default for CharacterBundle {
+    fn default() -> Self {
+        Self {
+            rigid_body: RigidBody::Dynamic,
+            locked_axis: LockedAxes::ROTATION_LOCKED,
+            collider: Collider::ball(CHARACTER_RADIUS),
+            velocity: Velocity::default(),
+            damping: Damping {
+                linear_damping: 10.0,
+                angular_damping: 1.0,
+            },
+        }
+    }
+}
+
+#[derive(Bundle)]
+pub struct PlayerBundle {
+    #[bundle]
+    character: CharacterBundle,
+    player: Player,
+    weapon: Gun,
+    wave: EnemyWave,
+    marker: PlayerMarker,
+}
+
+impl Default for PlayerBundle {
+    fn default() -> Self {
+        Self {
+            character: CharacterBundle::default(),
+            player: Player {
+                health: PLAYER_HEALTH,
+                speed: PLAYER_SPEED,
+            },
+            weapon: Gun {
+                damage: PLAYER_GUN_DAMAGE,
+                range: PLAYER_GUN_RANGE,
+                attack: Timer::from_seconds(PLAYER_ATTACKSPEED, TimerMode::Repeating),
+            },
+            wave: EnemyWave {
+                number: ENEMY_WAVE_NUMBER,
+                radius: ENEMY_WAVE_RADIUS,
+                timer: Timer::from_seconds(ENEMY_WAVE_SPAWN_TIME, TimerMode::Repeating),
+            },
+            marker: PlayerMarker,
+        }
+    }
+}
+
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -46,29 +105,7 @@ fn setup(
             transform: Transform::from_translation(Vec3::new(0.0, 10.0, 0.0)),
             ..default()
         })
-        .insert(RigidBody::Dynamic)
-        .insert(LockedAxes::ROTATION_LOCKED)
-        .insert(Collider::ball(10.0))
-        .insert(Velocity::default())
-        .insert(Damping {
-            linear_damping: 10.0,
-            angular_damping: 1.0,
-        })
-        .insert(Player {
-            health: PLAYER_HEALTH,
-            speed: PLAYER_SPEED,
-        })
-        .insert(Gun {
-            damage: PLAYER_GUN_DAMAGE,
-            range: PLAYER_GUN_RANGE,
-            attack: Timer::from_seconds(PLAYER_ATTACKSPEED, TimerMode::Repeating),
-        })
-        .insert(EnemyWave {
-            number: ENEMY_WAVE_NUMBER,
-            radius: ENEMY_WAVE_RADIUS,
-            timer: Timer::from_seconds(ENEMY_WAVE_SPAWN_TIME, TimerMode::Repeating),
-        })
-        .insert(PlayerMarker);
+        .insert(PlayerBundle::default());
 }
 
 fn player_movement(

@@ -1,14 +1,19 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
-use crate::{damage::PlayerDamageEvent, player::Player, utils::remove_all_with, GameState};
+use crate::{
+    damage::PlayerDamageEvent,
+    player::{CharacterBundle, Player},
+    utils::remove_all_with,
+    GameState,
+};
 
 pub const ENEMY_HEALTH: i32 = 20;
 pub const ENEMY_SPEED: f32 = 69.0;
 pub const ENEMY_MOVEMENT_FORCE: f32 = 1000.0;
 
 pub const ENEMY_ATTACK_DAMAGE: i32 = 10;
-pub const ENEMY_ATTACK_RADIUS: f32 = 69.0;
+pub const ENEMY_ATTACK_RADIUS: f32 = 30.0;
 pub const ENEMY_ATTACK_SPEED: f32 = 1.0;
 
 pub struct EnemyPlugin;
@@ -16,7 +21,8 @@ pub struct EnemyPlugin;
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            (enemy_spawn, enemy_movement, enemy_damage).in_set(OnUpdate(GameState::InGame)),
+            (enemy_spawn, enemy_movement, enemy_damage, enemy_despawn)
+                .in_set(OnUpdate(GameState::InGame)),
         )
         .add_system(remove_all_with::<EnemyMarker>.in_schedule(OnExit(GameState::InGame)));
     }
@@ -47,6 +53,33 @@ pub struct EnemyWave {
     pub timer: Timer,
 }
 
+#[derive(Bundle)]
+pub struct EnemyBundle {
+    character: CharacterBundle,
+    enemy: Enemy,
+    attack: EnemyAttack,
+    marker: EnemyMarker,
+}
+
+impl Default for EnemyBundle {
+    fn default() -> Self {
+        Self {
+            character: CharacterBundle::default(),
+            enemy: Enemy {
+                health: ENEMY_HEALTH,
+                speed: ENEMY_SPEED,
+                distance_to_player: f32::MAX,
+            },
+            attack: EnemyAttack {
+                damage: ENEMY_ATTACK_DAMAGE,
+                range: ENEMY_ATTACK_RADIUS,
+                timer: Timer::from_seconds(ENEMY_ATTACK_SPEED, TimerMode::Repeating),
+            },
+            marker: EnemyMarker,
+        }
+    }
+}
+
 fn enemy_spawn(
     time: Res<Time>,
     mut commands: Commands,
@@ -64,26 +97,8 @@ fn enemy_spawn(
                 .mul_vec3(Vec3::Y * wave.radius);
 
         commands
-            .spawn(RigidBody::Dynamic)
-            .insert(LockedAxes::ROTATION_LOCKED)
-            .insert(Collider::ball(10.0))
-            .insert(Velocity::default())
-            .insert(Damping {
-                linear_damping: 10.0,
-                angular_damping: 1.0,
-            })
-            .insert(TransformBundle::from(Transform::from_translation(position)))
-            .insert(Enemy {
-                health: ENEMY_HEALTH,
-                speed: ENEMY_SPEED,
-                distance_to_player: f32::MAX,
-            })
-            .insert(EnemyAttack {
-                damage: ENEMY_ATTACK_DAMAGE,
-                range: ENEMY_ATTACK_RADIUS,
-                timer: Timer::from_seconds(ENEMY_ATTACK_SPEED, TimerMode::Repeating),
-            })
-            .insert(EnemyMarker);
+            .spawn(EnemyBundle::default())
+            .insert(TransformBundle::from(Transform::from_translation(position)));
     }
 }
 
@@ -95,9 +110,9 @@ fn enemy_movement(
     let player_transform = player.single();
 
     for (enemy_transform, mut enemy, mut enemy_velocity) in enemies.iter_mut() {
-        let vector = player_transform.translation - enemy_transform.translation;
+        let vector = (player_transform.translation - enemy_transform.translation).truncate();
         let distance = vector.length();
-        let direction = vector.truncate().normalize();
+        let direction = vector.normalize();
         let movement = direction * time.delta().as_secs_f32();
 
         enemy_velocity.linvel = movement * enemy.speed * ENEMY_MOVEMENT_FORCE;
@@ -118,6 +133,14 @@ fn enemy_damage(
             damage_event.send(PlayerDamageEvent {
                 damage: attack.damage,
             });
+        }
+    }
+}
+
+fn enemy_despawn(mut commands: Commands, enemies: Query<(Entity, &Enemy)>) {
+    for (entity, enemy) in enemies.iter() {
+        if enemy.health <= 0 {
+            commands.entity(entity).despawn()
         }
     }
 }

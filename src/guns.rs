@@ -37,6 +37,35 @@ pub struct Bullet {
 #[derive(Component)]
 pub struct BulletMarker;
 
+#[derive(Bundle)]
+pub struct BulletBundle {
+    rigit_body: RigidBody,
+    collider: Collider,
+    velocity: Velocity,
+    mass: ColliderMassProperties,
+    bullet: Bullet,
+    marker: BulletMarker,
+}
+
+impl BulletBundle {
+    fn new(direction: Vec2, damage: i32) -> Self {
+        Self {
+            rigit_body: RigidBody::Dynamic,
+            collider: Collider::ball(2.5),
+            velocity: Velocity {
+                linvel: direction * BULLET_VELOCITY,
+                ..default()
+            },
+            mass: ColliderMassProperties::Mass(0.01),
+            bullet: Bullet {
+                lifespan: Timer::from_seconds(BULLET_LIFETIME, TimerMode::Once),
+                damage,
+            },
+            marker: BulletMarker,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct ShootEvent {
     target: Entity,
@@ -101,19 +130,8 @@ fn fire_bullets(
     bullet_transform.translation += (direction * 25.0).extend(0.0);
 
     commands
-        .spawn(RigidBody::Dynamic)
-        .insert(Collider::ball(2.5))
-        .insert(Velocity {
-            linvel: direction * BULLET_VELOCITY,
-            ..default()
-        })
-        .insert(ColliderMassProperties::Mass(100.0))
-        .insert(TransformBundle::from(bullet_transform))
-        .insert(Bullet {
-            lifespan: Timer::from_seconds(BULLET_LIFETIME, TimerMode::Once),
-            damage,
-        })
-        .insert(BulletMarker);
+        .spawn(BulletBundle::new(direction, damage))
+        .insert(TransformBundle::from(bullet_transform));
 }
 
 fn update_bullets(
