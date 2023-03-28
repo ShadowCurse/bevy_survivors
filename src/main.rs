@@ -27,7 +27,6 @@ fn main() {
         .run();
 }
 
-#[repr(u8)]
 #[derive(Default, Debug, Clone, PartialEq, Eq, Hash, States)]
 pub enum GameState {
     #[default]

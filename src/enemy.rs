@@ -3,11 +3,11 @@ use bevy_rapier2d::prelude::*;
 
 use crate::{damage::PlayerDamageEvent, player::Player, utils::remove_all_with, GameState};
 
-pub const ENEMY_HEALTH: i32 = 100;
+pub const ENEMY_HEALTH: i32 = 20;
 pub const ENEMY_SPEED: f32 = 69.0;
 pub const ENEMY_MOVEMENT_FORCE: f32 = 1000.0;
 
-pub const ENEMY_ATTACK_DAMAGE: i32 = 5;
+pub const ENEMY_ATTACK_DAMAGE: i32 = 10;
 pub const ENEMY_ATTACK_RADIUS: f32 = 69.0;
 pub const ENEMY_ATTACK_SPEED: f32 = 1.0;
 
