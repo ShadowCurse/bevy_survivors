@@ -2,7 +2,8 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
 use crate::{
-    damage::EnemyDamageEvent, enemy::Enemy, player::Player, utils::remove_all_with, GameState,
+    damage::EnemyDamageEvent, enemy::Enemy, player::Player, utils::remove_all_with, GameAssets,
+    GameState,
 };
 
 pub const BULLET_LIFETIME: f32 = 1.0;
@@ -14,7 +15,7 @@ impl Plugin for GunsPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<ShootEvent>()
             .add_systems(
-                (player_shoot, fire_bullets, update_bullets).in_set(OnUpdate(GameState::InGame)),
+                (player_shoot, bullets_spawn, bullets_update).in_set(OnUpdate(GameState::InGame)),
             )
             .add_system(remove_all_with::<BulletMarker>.in_schedule(OnExit(GameState::InGame)));
     }
@@ -98,7 +99,8 @@ fn player_shoot(
     );
 }
 
-fn fire_bullets(
+fn bullets_spawn(
+    game_assets: Res<GameAssets>,
     player: Query<&Transform, With<Player>>,
     enemies: Query<&Transform, With<Enemy>>,
     mut commands: Commands,
@@ -127,11 +129,15 @@ fn fire_bullets(
     bullet_transform.translation += (direction * 25.0).extend(0.0);
 
     commands
-        .spawn(BulletBundle::new(direction, damage))
-        .insert(TransformBundle::from(bullet_transform));
+        .spawn(SpriteBundle {
+            transform: bullet_transform,
+            texture: game_assets.bullet.clone(),
+            ..default()
+        })
+        .insert(BulletBundle::new(direction, damage));
 }
 
-fn update_bullets(
+fn bullets_update(
     time: Res<Time>,
     enemies: Query<Entity, With<Enemy>>,
     rapier_context: Res<RapierContext>,

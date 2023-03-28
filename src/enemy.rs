@@ -5,7 +5,7 @@ use crate::{
     damage::PlayerDamageEvent,
     player::{CharacterBundle, Player},
     utils::remove_all_with,
-    GameState,
+    GameAssets, GameState,
 };
 
 pub const ENEMY_HEALTH: i32 = 20;
@@ -13,7 +13,7 @@ pub const ENEMY_SPEED: f32 = 69.0;
 pub const ENEMY_MOVEMENT_FORCE: f32 = 1000.0;
 
 pub const ENEMY_ATTACK_DAMAGE: i32 = 10;
-pub const ENEMY_ATTACK_RADIUS: f32 = 30.0;
+pub const ENEMY_ATTACK_RADIUS: f32 = 80.0;
 pub const ENEMY_ATTACK_SPEED: f32 = 1.0;
 
 pub struct EnemyPlugin;
@@ -82,6 +82,7 @@ impl Default for EnemyBundle {
 
 fn enemy_spawn(
     time: Res<Time>,
+    game_assets: Res<GameAssets>,
     mut commands: Commands,
     mut wave: Query<(&Transform, &mut EnemyWave), With<Player>>,
 ) {
@@ -97,8 +98,12 @@ fn enemy_spawn(
                 .mul_vec3(Vec3::Y * wave.radius);
 
         commands
-            .spawn(EnemyBundle::default())
-            .insert(TransformBundle::from(Transform::from_translation(position)));
+            .spawn(SpriteBundle {
+                transform: Transform::from_translation(position),
+                texture: game_assets.enemy.clone(),
+                ..default()
+            })
+            .insert(EnemyBundle::default());
     }
 }
 

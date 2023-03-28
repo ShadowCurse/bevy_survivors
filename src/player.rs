@@ -1,9 +1,9 @@
-use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
+use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
-use crate::{enemy::EnemyWave, guns::Gun, utils::remove_all_with, GameState};
+use crate::{enemy::EnemyWave, guns::Gun, utils::remove_all_with, GameAssets, GameState};
 
-pub const CHARACTER_RADIUS: f32 = 10.0;
+pub const CHARACTER_RADIUS: f32 = 20.0;
 
 pub const PLAYER_SPEED: f32 = 120.0;
 pub const PLAYER_HEALTH: i32 = 100;
@@ -11,7 +11,7 @@ pub const PLAYER_MOVEMENT_FORCE: f32 = 1000.0;
 
 pub const PLAYER_GUN_DAMAGE: i32 = 10;
 pub const PLAYER_GUN_RANGE: f32 = 100.0;
-pub const PLAYER_ATTACKSPEED: f32 = 0.8;
+pub const PLAYER_ATTACKSPEED: f32 = 0.5;
 
 pub const ENEMY_WAVE_NUMBER: u32 = 3;
 pub const ENEMY_WAVE_RADIUS: f32 = 150.0;
@@ -93,16 +93,11 @@ impl Default for PlayerBundle {
     }
 }
 
-fn setup(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-) {
+fn setup(game_assets: Res<GameAssets>, mut commands: Commands) {
     commands
-        .spawn(MaterialMesh2dBundle {
-            mesh: meshes.add(shape::Circle::new(10.0).into()).into(),
-            material: materials.add(ColorMaterial::from(Color::PURPLE)),
-            transform: Transform::from_translation(Vec3::new(0.0, 10.0, 0.0)),
+        .spawn(SpriteBundle {
+            transform: Transform::from_translation(Vec3::new(0.0, 10.0, 1.0)),
+            texture: game_assets.player.clone(),
             ..default()
         })
         .insert(PlayerBundle::default());
