@@ -6,7 +6,6 @@ use crate::{
 };
 
 pub const BULLET_LIFETIME: f32 = 1.0;
-pub const BULLET_LIFETIME_AFTER_IMPACT: f32 = 0.1;
 pub const BULLET_VELOCITY: f32 = 2000.0;
 
 pub struct GunsPlugin;
@@ -42,7 +41,6 @@ pub struct BulletBundle {
     rigit_body: RigidBody,
     collider: Collider,
     velocity: Velocity,
-    mass: ColliderMassProperties,
     bullet: Bullet,
     marker: BulletMarker,
 }
@@ -56,7 +54,6 @@ impl BulletBundle {
                 linvel: direction * BULLET_VELOCITY,
                 ..default()
             },
-            mass: ColliderMassProperties::Mass(0.01),
             bullet: Bullet {
                 lifespan: Timer::from_seconds(BULLET_LIFETIME, TimerMode::Once),
                 damage,
@@ -148,13 +145,10 @@ fn update_bullets(
         } else {
             let mut hit = false;
             for contact_pair in rapier_context.contacts_with(entity) {
-                if let Ok(enemy) = enemies.get(contact_pair.collider1()) {
-                    hit = true;
-                    damage_event.send(EnemyDamageEvent {
-                        target: enemy,
-                        damage: bullet.damage,
-                    });
-                } else if let Ok(enemy) = enemies.get(contact_pair.collider2()) {
+                if let Ok(enemy) = enemies
+                    .get(contact_pair.collider1())
+                    .or(enemies.get(contact_pair.collider2()))
+                {
                     hit = true;
                     damage_event.send(EnemyDamageEvent {
                         target: enemy,
@@ -163,11 +157,7 @@ fn update_bullets(
                 }
             }
             if hit {
-                bullet
-                    .lifespan
-                    .set_duration(std::time::Duration::from_secs_f32(
-                        BULLET_LIFETIME_AFTER_IMPACT,
-                    ));
+                commands.entity(entity).despawn();
             }
         }
     }
