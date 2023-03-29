@@ -28,11 +28,18 @@ impl Plugin for EnemyPlugin {
     }
 }
 
+pub enum EnemyQuality {
+    Common,
+    Rare,
+    Epic,
+    Legendary,
+}
+
 #[derive(Component)]
 pub struct Enemy {
     pub health: i32,
     pub speed: f32,
-
+    pub quality: EnemyQuality,
     pub distance_to_player: f32,
 }
 
@@ -53,6 +60,11 @@ pub struct EnemyWave {
     pub timer: Timer,
 }
 
+#[derive(Component)]
+pub struct Experience {
+    pub exp: u32,
+}
+
 #[derive(Bundle)]
 pub struct EnemyBundle {
     character: CharacterBundle,
@@ -61,13 +73,14 @@ pub struct EnemyBundle {
     marker: EnemyMarker,
 }
 
-impl Default for EnemyBundle {
-    fn default() -> Self {
+impl EnemyBundle {
+    fn new(quality: EnemyQuality) -> Self {
         Self {
             character: CharacterBundle::default(),
             enemy: Enemy {
                 health: ENEMY_HEALTH,
                 speed: ENEMY_SPEED,
+                quality,
                 distance_to_player: f32::MAX,
             },
             attack: EnemyAttack {
@@ -97,13 +110,20 @@ fn enemy_spawn(
             + Quat::from_rotation_z((2.0 * std::f32::consts::PI / wave.number as f32) * n as f32)
                 .mul_vec3(Vec3::Y * wave.radius);
 
+        let quality = match rand::random::<u8>() % 4 {
+            0 => EnemyQuality::Common,
+            1 => EnemyQuality::Rare,
+            2 => EnemyQuality::Epic,
+            3 => EnemyQuality::Legendary,
+            _ => unreachable!(),
+        };
         commands
             .spawn(SpriteBundle {
                 transform: Transform::from_translation(position),
                 texture: game_assets.enemy.clone(),
                 ..default()
             })
-            .insert(EnemyBundle::default());
+            .insert(EnemyBundle::new(quality));
     }
 }
 
@@ -142,10 +162,27 @@ fn enemy_damage(
     }
 }
 
-fn enemy_despawn(mut commands: Commands, enemies: Query<(Entity, &Enemy)>) {
-    for (entity, enemy) in enemies.iter() {
+fn enemy_despawn(
+    game_assets: Res<GameAssets>,
+    mut commands: Commands,
+    enemies: Query<(Entity, &Enemy, &Transform)>,
+) {
+    for (entity, enemy, transform) in enemies.iter() {
         if enemy.health <= 0 {
-            commands.entity(entity).despawn()
+            commands.entity(entity).despawn();
+            let texture = match enemy.quality {
+                EnemyQuality::Common => game_assets.exp_common.clone(),
+                EnemyQuality::Rare => game_assets.exp_rare.clone(),
+                EnemyQuality::Epic => game_assets.exp_epic.clone(),
+                EnemyQuality::Legendary => game_assets.exp_legendary.clone(),
+            };
+            commands
+                .spawn(SpriteBundle {
+                    transform: *transform,
+                    texture,
+                    ..default()
+                })
+                .insert(Experience { exp: 10 });
         }
     }
 }

@@ -1,7 +1,12 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
-use crate::{enemy::EnemyWave, guns::Gun, utils::remove_all_with, GameAssets, GameState};
+use crate::{
+    enemy::{EnemyWave, Experience},
+    guns::Gun,
+    utils::remove_all_with,
+    GameAssets, GameState,
+};
 
 pub const CHARACTER_RADIUS: f32 = 20.0;
 
@@ -13,6 +18,11 @@ pub const PLAYER_GUN_DAMAGE: i32 = 10;
 pub const PLAYER_GUN_RANGE: f32 = 900.0;
 pub const PLAYER_ATTACKSPEED: f32 = 0.5;
 
+pub const PLAYER_PULL_EXP_RANGE: f32 = 600.0;
+pub const PLAYER_COLLECT_EXP_RANGE: f32 = 10.0;
+
+pub const EXP_SPEED: f32 = 400.0;
+
 pub const ENEMY_WAVE_NUMBER: u32 = 4;
 pub const ENEMY_WAVE_RADIUS: f32 = 800.0;
 pub const ENEMY_WAVE_SPAWN_TIME: f32 = 3.0;
@@ -22,7 +32,9 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_system(setup.in_schedule(OnEnter(GameState::InGame)))
-            .add_systems((player_movement, player_death).in_set(OnUpdate(GameState::InGame)))
+            .add_systems(
+                (player_movement, player_exp, player_death).in_set(OnUpdate(GameState::InGame)),
+            )
             .add_system(remove_all_with::<PlayerMarker>.in_schedule(OnExit(GameState::InGame)));
     }
 }
@@ -31,6 +43,7 @@ impl Plugin for PlayerPlugin {
 pub struct Player {
     pub health: i32,
     pub speed: f32,
+    pub exp: u32,
 }
 
 #[derive(Component)]
@@ -77,6 +90,7 @@ impl Default for PlayerBundle {
             player: Player {
                 health: PLAYER_HEALTH,
                 speed: PLAYER_SPEED,
+                exp: 0,
             },
             weapon: Gun {
                 damage: PLAYER_GUN_DAMAGE,
@@ -131,6 +145,28 @@ fn player_movement(
 
     let (player, mut velocity) = player.single_mut();
     velocity.linvel = movement * player.speed * PLAYER_MOVEMENT_FORCE;
+}
+
+fn player_exp(
+    time: Res<Time>,
+    mut commands: Commands,
+    mut player: Query<(&Transform, &mut Player), Without<Experience>>,
+    mut exp: Query<(Entity, &Experience, &mut Transform), Without<Player>>,
+) {
+    let (player_transform, mut player) = player.single_mut();
+
+    for (entity, exp, mut transform) in exp.iter_mut() {
+        let vec = player_transform.translation - transform.translation;
+        let len = vec.length();
+        let dir = vec.normalize();
+        if len < PLAYER_PULL_EXP_RANGE {
+            transform.translation += dir * time.delta().as_secs_f32() * EXP_SPEED;
+        }
+        if len < PLAYER_COLLECT_EXP_RANGE {
+            commands.entity(entity).despawn();
+            player.exp += exp.exp;
+        }
+    }
 }
 
 fn player_death(player: Query<&Player>, mut state: ResMut<NextState<GameState>>) {

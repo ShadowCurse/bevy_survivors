@@ -41,6 +41,10 @@ pub struct GameAssets {
     player: Handle<Image>,
     enemy: Handle<Image>,
     bullet: Handle<Image>,
+    exp_common: Handle<Image>,
+    exp_rare: Handle<Image>,
+    exp_epic: Handle<Image>,
+    exp_legendary: Handle<Image>,
 }
 
 fn setup(
@@ -60,6 +64,10 @@ fn setup(
         player: asset_server.load("sprites/player.png"),
         enemy: asset_server.load("sprites/enemy.png"),
         bullet: asset_server.load("sprites/bullet.png"),
+        exp_common: asset_server.load("sprites/exp_common.png"),
+        exp_rare: asset_server.load("sprites/exp_rare.png"),
+        exp_epic: asset_server.load("sprites/exp_epic.png"),
+        exp_legendary: asset_server.load("sprites/exp_legendary.png"),
     };
 
     commands.spawn(SpriteBundle {
