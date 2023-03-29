@@ -10,11 +10,11 @@ pub const PLAYER_HEALTH: i32 = 100;
 pub const PLAYER_MOVEMENT_FORCE: f32 = 1000.0;
 
 pub const PLAYER_GUN_DAMAGE: i32 = 10;
-pub const PLAYER_GUN_RANGE: f32 = 100.0;
+pub const PLAYER_GUN_RANGE: f32 = 900.0;
 pub const PLAYER_ATTACKSPEED: f32 = 0.5;
 
-pub const ENEMY_WAVE_NUMBER: u32 = 3;
-pub const ENEMY_WAVE_RADIUS: f32 = 150.0;
+pub const ENEMY_WAVE_NUMBER: u32 = 4;
+pub const ENEMY_WAVE_RADIUS: f32 = 800.0;
 pub const ENEMY_WAVE_SPAWN_TIME: f32 = 3.0;
 
 pub struct PlayerPlugin;

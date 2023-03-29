@@ -9,7 +9,7 @@ use crate::{
 };
 
 pub const ENEMY_HEALTH: i32 = 20;
-pub const ENEMY_SPEED: f32 = 69.0;
+pub const ENEMY_SPEED: f32 = 30.0;
 pub const ENEMY_MOVEMENT_FORCE: f32 = 1000.0;
 
 pub const ENEMY_ATTACK_DAMAGE: i32 = 10;

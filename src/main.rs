@@ -52,7 +52,7 @@ fn setup(
     physics.gravity = Vec2::ZERO;
 
     let mut camera_bundle = Camera2dBundle::default();
-    camera_bundle.projection.scale = 0.5;
+    camera_bundle.projection.scale = 1.5;
     commands.spawn(camera_bundle);
 
     let assets = GameAssets {
