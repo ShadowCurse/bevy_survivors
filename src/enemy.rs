@@ -24,7 +24,7 @@ impl Plugin for EnemyPlugin {
             (enemy_spawn, enemy_movement, enemy_damage, enemy_despawn)
                 .in_set(OnUpdate(GameState::InGame)),
         )
-        .add_system(remove_all_with::<EnemyMarker>.in_schedule(OnExit(GameState::InGame)));
+        .add_system(remove_all_with::<EnemyMarker>.in_schedule(OnEnter(GameState::MainMenu)));
     }
 }
 

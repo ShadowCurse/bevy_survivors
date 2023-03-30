@@ -21,7 +21,7 @@ fn main() {
         .add_plugin(enemy::EnemyPlugin)
         .add_plugin(guns::GunsPlugin)
         .add_plugin(player::PlayerPlugin)
-        .add_plugin(ui::UiMainMenuPlugin)
+        .add_plugin(ui::UiPlugin)
         .add_startup_system(setup)
         .add_system(camera_zoom)
         .run();
@@ -32,6 +32,7 @@ pub enum GameState {
     #[default]
     MainMenu,
     InGame,
+    LevelUp,
 }
 impl_into_state!(GameState);
 

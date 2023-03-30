@@ -22,6 +22,7 @@ pub const PLAYER_PULL_EXP_RANGE: f32 = 600.0;
 pub const PLAYER_COLLECT_EXP_RANGE: f32 = 10.0;
 
 pub const EXP_SPEED: f32 = 400.0;
+pub const LEVEL_UP_EXP: u32 = 50;
 
 pub const ENEMY_WAVE_NUMBER: u32 = 4;
 pub const ENEMY_WAVE_RADIUS: f32 = 800.0;
@@ -150,6 +151,7 @@ fn player_movement(
 fn player_exp(
     time: Res<Time>,
     mut commands: Commands,
+    mut game_state: ResMut<NextState<GameState>>,
     mut player: Query<(&Transform, &mut Player), Without<Experience>>,
     mut exp: Query<(Entity, &Experience, &mut Transform), Without<Player>>,
 ) {
@@ -165,6 +167,10 @@ fn player_exp(
         if len < PLAYER_COLLECT_EXP_RANGE {
             commands.entity(entity).despawn();
             player.exp += exp.exp;
+            if player.exp % LEVEL_UP_EXP == 0 {
+                player.exp %= LEVEL_UP_EXP;
+                game_state.set(GameState::LevelUp);
+            }
         }
     }
 }
