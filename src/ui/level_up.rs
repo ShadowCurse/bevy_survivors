@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{utils::remove_all_with, GameState};
+use crate::{player::PlayerUpgradeEvent, utils::remove_all_with, GameState};
 
 use super::{spawn_button, UiConfig, UiState};
 
@@ -50,6 +50,7 @@ fn setup(mut commands: Commands, config: Res<UiConfig>) {
 fn button_system(
     style: Res<UiConfig>,
     mut game_state: ResMut<NextState<GameState>>,
+    mut player_upgrade_event: EventWriter<PlayerUpgradeEvent>,
     mut interaction_query: Query<
         (&UiLevelUpButton, &Interaction, &mut BackgroundColor),
         (Changed<Interaction>, With<Button>),
@@ -60,8 +61,14 @@ fn button_system(
             Interaction::Clicked => {
                 *color = style.button_color_pressed.into();
                 match button {
-                    UiLevelUpButton::AttackSpeed => game_state.set(GameState::InGame),
-                    UiLevelUpButton::AttackDamage => game_state.set(GameState::InGame),
+                    UiLevelUpButton::AttackSpeed => {
+                        player_upgrade_event.send(PlayerUpgradeEvent::AttackSpeed);
+                        game_state.set(GameState::InGame);
+                    }
+                    UiLevelUpButton::AttackDamage => {
+                        player_upgrade_event.send(PlayerUpgradeEvent::AttackDamage);
+                        game_state.set(GameState::InGame);
+                    }
                 }
             }
             Interaction::Hovered => {

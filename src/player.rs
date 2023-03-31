@@ -32,11 +32,13 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(setup.in_schedule(OnEnter(GameState::InGame)))
+        app.add_event::<PlayerUpgradeEvent>()
+            .add_system(setup.in_schedule(OnExit(GameState::MainMenu)))
             .add_systems(
-                (player_movement, player_exp, player_death).in_set(OnUpdate(GameState::InGame)),
+                (player_movement, player_exp, player_upgrade, player_death)
+                    .in_set(OnUpdate(GameState::InGame)),
             )
-            .add_system(remove_all_with::<PlayerMarker>.in_schedule(OnExit(GameState::InGame)));
+            .add_system(remove_all_with::<PlayerMarker>.in_schedule(OnEnter(GameState::MainMenu)));
     }
 }
 
@@ -82,6 +84,12 @@ pub struct PlayerBundle {
     weapon: Gun,
     wave: EnemyWave,
     marker: PlayerMarker,
+}
+
+#[derive(Debug)]
+pub enum PlayerUpgradeEvent {
+    AttackDamage,
+    AttackSpeed,
 }
 
 impl Default for PlayerBundle {
@@ -171,6 +179,25 @@ fn player_exp(
                 player.exp %= LEVEL_UP_EXP;
                 game_state.set(GameState::LevelUp);
             }
+        }
+    }
+}
+
+fn player_upgrade(
+    mut gun: Query<&mut Gun, With<Player>>,
+    mut player_upgrade_event: EventReader<PlayerUpgradeEvent>,
+) {
+    let mut gun = gun.single_mut();
+    for event in player_upgrade_event.iter() {
+        match event {
+            PlayerUpgradeEvent::AttackSpeed => {
+                let timer = Timer::from_seconds(
+                    gun.attack.duration().as_secs_f32() - 0.1,
+                    TimerMode::Repeating,
+                );
+                gun.attack = timer;
+            }
+            PlayerUpgradeEvent::AttackDamage => gun.damage += 10,
         }
     }
 }
