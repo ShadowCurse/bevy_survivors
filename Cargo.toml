@@ -1,5 +1,5 @@
 [package]
-name = "bevy_game"
+name = "bevy_survivor"
 version = "0.1.0"
 edition = "2021"
 
@@ -12,6 +12,6 @@ opt-level = 1
 opt-level = 3
 
 [dependencies]
-bevy = { version = "0.10.0", features = ["dynamic_linking", "wayland"] }
+bevy = { version = "0.10.1", features = ["dynamic_linking", "wayland"] }
 bevy_rapier2d = "0.21.0"
 rand = "0.8.5"
