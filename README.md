@@ -1,3 +1,3 @@
-# Bevy survivor 
+# Bevy survivors
 
-Vampire survivor clone in Bevy
+Vampire survivors clone in Bevy
